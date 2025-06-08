@@ -9,7 +9,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 app.post("/ask", async (req, res) => {
@@ -21,20 +21,25 @@ app.post("/ask", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "אתה מדריך בתכנית דרך פרת. ענה על שאלות על סמינרים, ערכים, עלויות, והתנהלות בצורה נגישה, ברורה ומכבדת."
+          content: "אתה מדריך בתכנית דרך פרת. ענה על שאלות על סמינרים, מחויבויות, ערכים, מדריכים ותהליכי קבלה.",
         },
         {
           role: "user",
-          content: question
-        }
+          content: question,
+        },
       ],
-      max_tokens: 300
     });
 
-    res.json({ answer: response.choices[0].message.content.trim() });
+    const answer = response.choices?.[0]?.message?.content?.trim();
+
+    if (!answer) {
+      throw new Error("No answer returned from OpenAI");
+    }
+
+    res.json({ answer }); // שולח JSON עם שדה 'answer' שמתאים למה שהקוד בצ'אט מצפה לו
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "שגיאה בשרת או במפתח ה-API." });
+    console.error("Error in /ask:", error);
+    res.status(500).json({ answer: "שגיאה בטיפול בשאלה. נסה שוב מאוחר יותר." });
   }
 });
 
